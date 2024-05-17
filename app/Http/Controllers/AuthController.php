@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\SendEmailRegister;
 use App\Models\User;
 use App\Models\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -23,7 +24,7 @@ class AuthController extends Controller
         $validator = Validator::make($requestData, [
             'name' => 'required|max:255',
             'email' => 'required|email|unique:users,email|max:255',
-            'password' => 'required|min:5|max:255',
+            'password' => 'required|min:4|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -38,12 +39,14 @@ class AuthController extends Controller
                 'email' => $request->input('email'),
                 'password' => Hash::make($request->input('password')),
             ]);
+            Mail::to($request->input('email'))->send(new SendEmailRegister($request->input('name'), $request->input('email'), 'User'));
         } else {
             Admin::create([
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
                 'password' => Hash::make($request->input('email')),
             ]);
+            Mail::to($request->input('email'))->send(new SendEmailRegister($request->input('name'), $request->input('email'), 'Admin'));
         }
     }
 }
